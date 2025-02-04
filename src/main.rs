@@ -1,72 +1,33 @@
 #![no_std]
 #![no_main]
 
-use core::cell::RefCell;
 use defmt::*;
 
-use embassy_embedded_hal::shared_bus::blocking::spi::SpiDevice;
 use embassy_executor::Spawner;
-use embassy_stm32::gpio::{Level, Output, Speed};
-use embassy_stm32::spi::{Config, Spi};
-use embassy_stm32::time::Hertz;
 
-use embassy_sync::blocking_mutex::NoopMutex;
 use embedded_graphics::{
     pixelcolor::Rgb565,
     prelude::*,
     primitives::{Circle, PrimitiveStyleBuilder, Rectangle, Sector},
 };
 
-use mipidsi::models::ILI9341Rgb565;
-use static_cell::StaticCell;
-
 use {defmt_rtt as _, panic_probe as _};
-
-type Spi3Bus = NoopMutex<RefCell<Spi<'static, embassy_stm32::mode::Async>>>;
+mod display;
+mod rcc;
+mod spi;
 
 #[embassy_executor::main]
 async fn main(_spawner: Spawner) {
     info!("Hello World!");
     let mut config = embassy_stm32::Config::default();
-    {
-        use embassy_stm32::rcc::*;
-        config.rcc.sys = Sysclk::PLL1_R;
-        config.rcc.hse = Some(Hse {
-            freq: Hertz::mhz(8),
-            mode: HseMode::Oscillator,
-        });
-        config.rcc.pll = Some(Pll {
-            source: PllSource::HSE,
-            prediv: PllPreDiv::DIV1,
-            mul: PllMul::MUL20,
-            divp: None,
-            divq: None,
-            divr: Some(PllRDiv::DIV2),
-        })
-    }
+    rcc::configure_rcc(&mut config);
+
     let p = embassy_stm32::init(config);
 
-    let mut spi_config = Config::default();
-    spi_config.frequency = Hertz(40_000_000);
+    let spi = spi::init(p.SPI1, p.PA5, p.PA7, p.DMA1_CH3);
 
-    let spi = Spi::new_txonly(p.SPI1, p.PA5, p.PA7, p.DMA1_CH3, spi_config);
-
-    let dc = Output::new(p.PC2, Level::Low, Speed::VeryHigh);
-    let reset = Output::new(p.PC3, Level::Low, Speed::VeryHigh);
-    let cs = Output::new(p.PC0, Level::High, Speed::VeryHigh);
-
-    static SPI_BUS: StaticCell<Spi3Bus> = StaticCell::new();
-    let spi_bus = SPI_BUS.init(NoopMutex::new(RefCell::new(spi)));
-
-    let dev = SpiDevice::new(spi_bus, cs);
-    let mut delay = embassy_time::Delay;
-
-    let mut buffer = [0_u8; 240 * 3];
-    let interface = mipidsi::interface::SpiInterface::new(dev, dc, &mut buffer);
-    let mut display = mipidsi::Builder::new(ILI9341Rgb565, interface)
-        .reset_pin(reset)
-        .init(&mut delay)
-        .unwrap();
+    let mut buffer = [0_u8; 240];
+    let mut display = display::create_display(spi, p.PC3, p.PC0, p.PC2, buffer.as_mut_slice());
 
     display
         .fill_solid(
