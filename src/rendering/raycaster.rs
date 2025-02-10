@@ -4,7 +4,7 @@ use embedded_graphics::{
     pixelcolor::Rgb565,
     prelude::{RgbColor, WebColors},
 };
-use libm::{floorf, sqrtf, tanf};
+use micromath::F32Ext;
 
 const MAP_COLORS_H: [Rgb565; 3] = [Rgb565::BLACK, Rgb565::CSS_RED, Rgb565::CSS_LAVENDER];
 const MAP_COLORS_V: [Rgb565; 3] = [Rgb565::BLACK, Rgb565::CSS_DARK_RED, Rgb565::CSS_DARK_CYAN];
@@ -12,9 +12,10 @@ const MAP_COLORS_V: [Rgb565; 3] = [Rgb565::BLACK, Rgb565::CSS_DARK_RED, Rgb565::
 pub fn cast_ray(x: f32, y: f32, theta: f32) -> (f32, Rgb565) {
     // Check Horizontal lines
     let (hx, hy, colorh);
+
     'horizontal: {
         let theta = (theta + 2.0 * PI) % (2.0 * PI);
-        let atan = 1.0 / tanf(theta);
+        let atan = F32Ext::atan(theta);
 
         let (mut rx, mut ry, mut dof, dy, dx);
         if theta == PI || theta == 0.0 {
@@ -24,14 +25,14 @@ pub fn cast_ray(x: f32, y: f32, theta: f32) -> (f32, Rgb565) {
             break 'horizontal;
         } else if theta > PI {
             // Looking up
-            ry = floorf(y);
+            ry = F32Ext::floor(y);
             rx = x - (y - ry) * atan;
             dy = -1.0;
             dx = dy * atan;
             dof = 0;
             //println!("UP: ø={}, ry={}, rx={}", theta, ry, rx)
         } else {
-            ry = floorf(y + 1.0);
+            ry = F32Ext::floor(y + 1.0);
             rx = x - (y - ry) * atan;
             dy = 1.0;
             dx = dy * atan;
@@ -66,7 +67,7 @@ pub fn cast_ray(x: f32, y: f32, theta: f32) -> (f32, Rgb565) {
     let (vx, vy, colorv);
 
     'vertical: {
-        let ntan = -tanf(theta);
+        let ntan = -F32Ext::tan(theta);
 
         let (mut rx, mut ry, mut dof, dy, dx);
 
@@ -77,13 +78,13 @@ pub fn cast_ray(x: f32, y: f32, theta: f32) -> (f32, Rgb565) {
             break 'vertical;
         } else if 3.0 * PI / 2.0 <= theta || theta < PI / 2.0 {
             // Looking right
-            rx = floorf(x + 1.0);
+            rx = F32Ext::floor(x + 1.0);
             ry = y + (x - rx) * ntan;
             dx = 1.0;
             dy = -dx * ntan;
             dof = 0;
         } else {
-            rx = floorf(x);
+            rx = F32Ext::floor(x);
             ry = y + (x - rx) * ntan;
             dx = -1.0;
             dy = -dx * ntan;
@@ -114,8 +115,8 @@ pub fn cast_ray(x: f32, y: f32, theta: f32) -> (f32, Rgb565) {
         vy = ry;
         colorv = MAP_COLORS_V[colorindex as usize];
     }
-    let dh = sqrtf((hx - x) * (hx - x) + (hy - y) * (hy - y));
-    let dv = sqrtf((vx - x) * (vx - x) + (vy - y) * (vy - y));
+    let dh = F32Ext::sqrt((hx - x) * (hx - x) + (hy - y) * (hy - y));
+    let dv = F32Ext::sqrt((vx - x) * (vx - x) + (vy - y) * (vy - y));
 
     if dh < dv {
         return (dh, colorh);
