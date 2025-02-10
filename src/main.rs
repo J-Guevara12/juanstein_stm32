@@ -12,12 +12,18 @@ use static_cell::StaticCell;
 use {defmt_rtt as _, panic_probe as _};
 
 mod display;
+mod game;
 mod rcc;
+mod rendering;
 mod spi;
 mod tasks;
 
 static EXECUTOR: StaticCell<RawExecutor> = StaticCell::new();
 static SLEEP_TICKS: AtomicU64 = AtomicU64::new(0);
+
+const HEIGHT: usize = 240;
+const WIDTH: usize = 320;
+pub const PI: f32 = 3.14159265359;
 
 #[entry]
 fn main() -> ! {

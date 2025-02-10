@@ -8,7 +8,18 @@ use embassy_sync::{blocking_mutex::raw::NoopRawMutex, mutex::Mutex};
 use mipidsi::{interface::SpiInterfaceAsync, models::ILI9341Rgb565, Display};
 use static_cell::StaticCell;
 
+pub const BUFFER_COLUMN_SIZE: usize = 80;
+
 type SpiBus = Mutex<NoopRawMutex, Spi<'static, embassy_stm32::mode::Async>>;
+pub type DisplayType<'a> = Display<
+    SpiInterfaceAsync<
+        'a,
+        SpiDevice<'static, NoopRawMutex, Spi<'static, Async>, Output<'static>>,
+        Output<'static>,
+    >,
+    ILI9341Rgb565,
+    Output<'static>,
+>;
 
 pub async fn create_display<'a, P1: Pin, P2: Pin, P3: Pin>(
     spi: Spi<'static, Async>,
@@ -16,20 +27,7 @@ pub async fn create_display<'a, P1: Pin, P2: Pin, P3: Pin>(
     cs_pin: P2,
     dc_pin: P3,
     buffer: &'a mut [u8],
-) -> Display<
-    SpiInterfaceAsync<
-        'a,
-        embassy_embedded_hal::shared_bus::asynch::spi::SpiDevice<
-            'static,
-            NoopRawMutex,
-            embassy_stm32::spi::Spi<'static, embassy_stm32::mode::Async>,
-            embassy_stm32::gpio::Output<'static>,
-        >,
-        embassy_stm32::gpio::Output<'static>,
-    >,
-    ILI9341Rgb565,
-    embassy_stm32::gpio::Output<'static>,
-> {
+) -> DisplayType<'a> {
     static SPI_BUS: StaticCell<SpiBus> = StaticCell::new();
     let spi_bus = SPI_BUS.init(Mutex::new(spi));
 
