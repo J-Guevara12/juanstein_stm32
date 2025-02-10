@@ -1,22 +1,21 @@
 #![no_std]
 #![no_main]
 
+mod game;
+mod peripherals;
+mod rendering;
+mod tasks;
+
 use defmt::*;
 
 use cortex_m_rt::entry;
 use embassy_executor::raw::Executor as RawExecutor;
 use embassy_time::Instant;
+use peripherals::{display, rcc, spi};
 use portable_atomic::{AtomicU64, Ordering};
 use static_cell::StaticCell;
 
 use {defmt_rtt as _, panic_probe as _};
-
-mod display;
-mod game;
-mod rcc;
-mod rendering;
-mod spi;
-mod tasks;
 
 static EXECUTOR: StaticCell<RawExecutor> = StaticCell::new();
 static SLEEP_TICKS: AtomicU64 = AtomicU64::new(0);
