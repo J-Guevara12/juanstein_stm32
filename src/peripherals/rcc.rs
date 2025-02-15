@@ -8,6 +8,7 @@ pub fn configure_rcc(config: &mut Config) {
         freq: Hertz::mhz(8),
         mode: HseMode::Oscillator,
     });
+    config.rcc.mux.adcsel = mux::Adcsel::SYS;
     config.rcc.pll = Some(Pll {
         source: PllSource::HSE,
         prediv: PllPreDiv::DIV1,

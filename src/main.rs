@@ -33,8 +33,10 @@ fn main() -> ! {
     let p = embassy_stm32::init(config);
 
     let spi = spi::init(p.SPI1, p.PA5, p.PA7, p.DMA1_CH3);
+
     let executor = EXECUTOR.init(RawExecutor::new(usize::MAX as *mut ()));
     let spawner = executor.spawner();
+
     spawner
         .spawn(tasks::display_task(
             spi,
@@ -44,6 +46,7 @@ fn main() -> ! {
         ))
         .unwrap();
     spawner.spawn(tasks::cpu_usage()).unwrap();
+    spawner.spawn(tasks::adc_task(p.ADC1, p.PA0));
     loop {
         let before = Instant::now().as_ticks();
         cortex_m::asm::wfe();
