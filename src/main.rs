@@ -41,12 +41,12 @@ fn main() -> ! {
         .spawn(tasks::display_task(
             spi,
             p.PC3.into(),
-            p.PC0.into(),
+            p.PB0.into(),
             p.PC2.into(),
         ))
         .unwrap();
     spawner.spawn(tasks::cpu_usage()).unwrap();
-    spawner.spawn(tasks::adc_task(p.ADC1, p.PA0));
+    spawner.spawn(tasks::adc_task(p.ADC1, p.PC0, p.PC1));
     loop {
         let before = Instant::now().as_ticks();
         cortex_m::asm::wfe();
