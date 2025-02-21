@@ -27,8 +27,8 @@ embedded-hal = "1.0.0"
 mipidsi = "0.9.0"
 portable-atomic = "1.10.0"
 micromath = "2.1.0"
+mpu6050 = "0.1.6"
 
 
 [patch.crates-io]
 mipidsi = { git = "https://github.com/J-Guevara12/mipidsi.git"}
-
