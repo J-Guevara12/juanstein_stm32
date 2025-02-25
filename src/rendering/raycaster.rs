@@ -9,19 +9,24 @@ use micromath::F32Ext;
 const MAP_COLORS_H: [Rgb565; 3] = [Rgb565::BLACK, Rgb565::CSS_RED, Rgb565::CSS_LAVENDER];
 const MAP_COLORS_V: [Rgb565; 3] = [Rgb565::BLACK, Rgb565::CSS_DARK_RED, Rgb565::CSS_DARK_CYAN];
 
-pub fn cast_ray(x: f32, y: f32, theta: f32) -> (f32, Rgb565) {
+pub fn cast_ray(x: f32, y: f32, theta: f32) -> (f32, bool, usize, usize) {
+    // distance
+    // isVertical,
+    // texture_index,
+    // column_index
+
     // Check Horizontal lines
-    let (hx, hy, colorh);
+    let (hx, hy, texture_index_h);
 
     'horizontal: {
         let theta = (theta + 2.0 * PI) % (2.0 * PI);
-        let atan = F32Ext::atan(theta);
+        let atan = 1.0 / F32Ext::tan(theta);
 
         let (mut rx, mut ry, mut dof, dy, dx);
         if theta == PI || theta == 0.0 {
             hx = INFINITY;
             hy = INFINITY;
-            colorh = MAP_COLORS_H[0];
+            texture_index_h = 0;
             break 'horizontal;
         } else if theta > PI {
             // Looking up
@@ -60,11 +65,11 @@ pub fn cast_ray(x: f32, y: f32, theta: f32) -> (f32, Rgb565) {
                 break;
             }
         }
-        colorh = MAP_COLORS_H[colorindex as usize];
+        texture_index_h = colorindex;
         hx = rx;
         hy = ry;
     }
-    let (vx, vy, colorv);
+    let (vx, vy, texture_index_v);
 
     'vertical: {
         let ntan = -F32Ext::tan(theta);
@@ -74,7 +79,7 @@ pub fn cast_ray(x: f32, y: f32, theta: f32) -> (f32, Rgb565) {
         if theta == PI / 2.0 || theta == 3.0 * PI / 2.0 {
             vx = INFINITY;
             vy = INFINITY;
-            colorv = MAP_COLORS_H[0];
+            texture_index_v = 0;
             break 'vertical;
         } else if 3.0 * PI / 2.0 <= theta || theta < PI / 2.0 {
             // Looking right
@@ -113,14 +118,22 @@ pub fn cast_ray(x: f32, y: f32, theta: f32) -> (f32, Rgb565) {
         }
         vx = rx;
         vy = ry;
-        colorv = MAP_COLORS_V[colorindex as usize];
+        texture_index_v = colorindex;
     }
     let dh = F32Ext::sqrt((hx - x) * (hx - x) + (hy - y) * (hy - y));
     let dv = F32Ext::sqrt((vx - x) * (vx - x) + (vy - y) * (vy - y));
 
-    if dh < dv {
-        return (dh, colorh);
+    let texture_index = if dh < dv {
+        texture_index_h
     } else {
-        return (dv, colorv);
-    }
+        texture_index_v
+    };
+
+    let d = if dh < dv { dh } else { dv };
+
+    let column_number = if dh < dv { hx } else { vy };
+    let column_index = ((column_number - F32Ext::floor(column_number))
+        * crate::textures::TEXTURE_SIZE as f32) as u8;
+
+    return (d, dh > dv, texture_index as usize, column_index as usize);
 }

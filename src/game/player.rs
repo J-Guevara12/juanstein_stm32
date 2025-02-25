@@ -1,14 +1,17 @@
-use embedded_graphics::{
-    pixelcolor::Rgb565,
-    prelude::*,
-    primitives::{PrimitiveStyleBuilder, Rectangle},
-};
+use core::usize;
 
-use crate::PI;
+use embedded_graphics::{pixelcolor::Rgb565, prelude::*, primitives::Rectangle};
+
+use crate::textures::TEXTURE_SIZE;
 use crate::{rendering::raycaster::cast_ray, HEIGHT};
+use crate::{
+    textures::{COLOR_PALETTE_H, COLOR_PALETTE_V, TEXTURES},
+    PI,
+};
 
 use crate::display::DisplayType;
 use crate::display::BUFFER_COLUMN_SIZE;
+
 use micromath::F32Ext;
 
 use super::MAP;
@@ -54,17 +57,13 @@ impl Player {
 
             let dt = i as f32 * max_angle / n_steps as f32 - max_angle / 2.0;
 
-            let (dist, color) = cast_ray(self.px, self.py, self.theta + dt);
+            let (dist, is_vertical, texture_index, column_index) =
+                cast_ray(self.px, self.py, self.theta + dt);
 
             let height =
-                F32Ext::round(crate::HEIGHT as f32 / (dist * F32Ext::cos(dt) * 3.5)) as usize;
+                F32Ext::round(crate::HEIGHT as f32 / (dist * F32Ext::cos(dt) * 2.5)) as usize;
             let height = usize::min(crate::HEIGHT, height);
             let y0 = (crate::HEIGHT - height) as i32 / 2;
-
-            let rect = Rectangle::new(
-                Point::new(y0, (i % BUFFER_COLUMN_SIZE as usize) as i32),
-                Size::new(height as u32, 1),
-            );
 
             if height != HEIGHT {
                 let ceiling = Rectangle::new(
@@ -86,8 +85,25 @@ impl Player {
                     .unwrap();
             }
 
-            // TODO: DMA Fill (memory to memory transfer)
-            display.fill_solid_in_context(&rect, color).unwrap();
+            for y in 0..TEXTURE_SIZE {
+                let y_0 = y0 + (y * height / TEXTURE_SIZE) as i32;
+                let h = (y + 1) * height / TEXTURE_SIZE - y * height / TEXTURE_SIZE;
+                if (y_0 + y0 + h as i32) as usize > HEIGHT {
+                    break;
+                }
+                let rect = Rectangle::new(
+                    Point::new(y_0, (i % BUFFER_COLUMN_SIZE as usize) as i32),
+                    Size::new(h as u32, 1),
+                );
+                let idx = TEXTURES[texture_index][column_index][y] as usize;
+                let color = if is_vertical {
+                    COLOR_PALETTE_V[idx]
+                } else {
+                    COLOR_PALETTE_H[idx]
+                };
+                // TODO: DMA Fill (memory to memory transfer)
+                display.fill_solid_in_context(&rect, color).unwrap();
+            }
 
             if i % BUFFER_COLUMN_SIZE == 0 {
                 let area = Rectangle::new(
