@@ -20,7 +20,7 @@ pub async fn sensors_task(adc: ADC1, channel_x: PC0, channel_y: PC1, i2c: I2c<'s
     let mut mpu = mpu6050::Mpu6050::new_with_sens(
         i2c,
         mpu6050::device::AccelRange::G2,
-        mpu6050::device::GyroRange::D2000,
+        mpu6050::device::GyroRange::D250,
     );
     mpu.init(&mut embassy_time::Delay);
 
@@ -38,8 +38,7 @@ pub async fn sensors_task(adc: ADC1, channel_x: PC0, channel_y: PC1, i2c: I2c<'s
             player.move_player(y, -x);
             match mpu.get_gyro() {
                 Ok(gyro) => {
-                    let delta = gyro[0];
-                    player.rotate_player(delta);
+                    player.rotate_player(gyro[0]);
                 }
                 Err(_) => {
                     error!("I2C Error")
