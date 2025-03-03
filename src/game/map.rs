@@ -17,6 +17,19 @@ pub const MAP: [[u8; 16]; 16] = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ];
 
+/// Checks if a certain position is inside the map
+///
+/// # Arguments
+///
+/// * `x` - position at x (f32)
+/// * `y` - Position at y (f32)
+///
+/// # Examples
+///
+/// ```
+/// inside_map(1.1, 4.5) -> true
+/// inside_map(100.1, 4.5) -> false
+/// ```
 pub fn inside_map(x: f32, y: f32) -> bool {
     let x = x as isize;
     let y = y as isize;

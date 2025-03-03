@@ -38,7 +38,7 @@ pub async fn sensors_task(adc: ADC1, channel_x: PC0, channel_y: PC1, i2c: I2c<'s
             let y = ((adc.blocking_read(&mut channel_y)) as i32 - 31) as f32
                 / (GOAL_SAMPLE_FREQUENCY_HZ as f32 * 64.0);
             let mut player = PLAYER.lock().await;
-            player.move_player(y, -x);
+            player._move(y, -x);
             match mpu.get_gyro() {
                 Ok(gyro) => {
                     player.rotate_player(gyro[0]);
