@@ -7,6 +7,16 @@ use crate::display::BUFFER_COLUMN_SIZE;
 
 const GOAL_FPS: u64 = 30;
 
+/// Updates the display at GOAL_FPS HZ
+/// Copies the player from the Mutex and calls tha draw_player_raycaster method
+///
+/// # Arguments
+///
+/// * `spi` - SPI Object
+/// * `reset_pin` - PIN connected to reset
+/// * `cs_pin` - PIN connected to CS
+/// * `dc_pin` - PIN connected to DC
+/// ```
 #[embassy_executor::task]
 pub async fn display_task(
     spi: Spi<'static, Async>,

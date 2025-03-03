@@ -10,6 +10,14 @@ use crate::PLAYER;
 
 const GOAL_SAMPLE_FREQUENCY_HZ: u64 = 40;
 
+/// Configures the ADC and reads from two channels, configures i2C and enables the MPU6050 driver.
+///
+/// # Arguments
+///
+/// * `adc` - ADC driver to use
+/// * `channel_x` - Channel for the x axis(Have to enable the GPIOX_ASCR register for the selected PIN)
+/// * `channel_y` - Channel for the y axis (Have to enable the GPIOX_ASCR register for the selected PIN)
+/// * `i2c` - i2C driver to use.
 #[embassy_executor::task]
 pub async fn sensors_task(adc: ADC1, channel_x: PC0, channel_y: PC1, i2c: I2c<'static, Async>) {
     let mut ticker = Ticker::every(Duration::from_millis(1000 / GOAL_SAMPLE_FREQUENCY_HZ));
@@ -41,7 +49,7 @@ pub async fn sensors_task(adc: ADC1, channel_x: PC0, channel_y: PC1, i2c: I2c<'s
             player._move(y, -x);
             match mpu.get_gyro() {
                 Ok(gyro) => {
-                    player.rotate_player(gyro[0]);
+                    player.rotate(gyro[0]);
                 }
                 Err(_) => {
                     error!("I2C Error")

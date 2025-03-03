@@ -3,6 +3,7 @@ use embassy_time::{Duration, Instant, Ticker};
 use portable_atomic::Ordering;
 
 #[embassy_executor::task]
+// Displays the CPU Usage each second using defmt
 pub async fn cpu_usage() {
     let mut previous_tick = 0u64;
     let mut previous_sleep_tick = 0u64;

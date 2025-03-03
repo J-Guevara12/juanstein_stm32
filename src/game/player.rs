@@ -206,7 +206,7 @@ impl Player {
     /// // Rotates to the left
     /// player.rotate_player(-PI/2).
     /// ```
-    pub fn rotate_player(&mut self, increment: f32) {
+    pub fn rotate(&mut self, increment: f32) {
         // Value always will be bound between 0.0 and 2*PI.
         self.theta = (self.theta + increment * PLAYER_ANGULAR_SPEED) % (2.0 * PI);
         if self.theta < 0.0 {
