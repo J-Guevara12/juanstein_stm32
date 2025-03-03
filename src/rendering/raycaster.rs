@@ -9,12 +9,27 @@ use micromath::F32Ext;
 const MAP_COLORS_H: [Rgb565; 3] = [Rgb565::BLACK, Rgb565::CSS_RED, Rgb565::CSS_LAVENDER];
 const MAP_COLORS_V: [Rgb565; 3] = [Rgb565::BLACK, Rgb565::CSS_DARK_RED, Rgb565::CSS_DARK_CYAN];
 
+/// Casts a ray from the player and returns:
+///
+/// * distance (f32)
+/// * if the wall is vertical (bool)
+/// * texture index (which type of wall hit) (usize)
+/// * column index (which column matches) (usize)
+///
+/// # Arguments
+///
+/// * `x` - Player position at x
+/// * `y` - Player position at y
+/// * `theta` - Angle at which the rast will be cast
+///
+/// # Examples
+///
+/// ```
+/// let player = Player::default();
+/// let (distance, is_vertical, texture_index, column_index) = cast_ray(player.px, player.py,
+/// player.theta + PI / 3.0);
+/// ```
 pub fn cast_ray(x: f32, y: f32, theta: f32) -> (f32, bool, usize, usize) {
-    // distance
-    // isVertical,
-    // texture_index,
-    // column_index
-
     // Check Horizontal lines
     let (hx, hy, texture_index_h);
 
@@ -35,14 +50,12 @@ pub fn cast_ray(x: f32, y: f32, theta: f32) -> (f32, bool, usize, usize) {
             dy = -1.0;
             dx = dy * atan;
             dof = 0;
-            //println!("UP: ø={}, ry={}, rx={}", theta, ry, rx)
         } else {
             ry = F32Ext::floor(y + 1.0);
             rx = x - (y - ry) * atan;
             dy = 1.0;
             dx = dy * atan;
             dof = 0;
-            //println!("DOWN: ø={}, ry={}, rx={}", theta, ry, rx)
         }
         let mut colorindex = 0;
         while dof < 8 {
