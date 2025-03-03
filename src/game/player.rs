@@ -16,9 +16,9 @@ use micromath::F32Ext;
 
 use super::MAP;
 
-const PLAYER_SIZE: u32 = 3;
-const PLAYER_SPEED: f32 = 2.5;
-const PLAYER_ANGULAR_SPEED: f32 = 0.05;
+const SCALING_FACTOR: f32 = 1.2;
+const PLAYER_SPEED: f32 = 3.5;
+const PLAYER_ANGULAR_SPEED: f32 = 0.10;
 
 #[derive(Clone)]
 pub struct Player {
@@ -61,15 +61,16 @@ impl Player {
                 cast_ray(self.px, self.py, self.theta + dt);
 
             let height =
-                F32Ext::round(crate::HEIGHT as f32 / (dist * F32Ext::cos(dt) * 2.5)) as usize;
-            let height = usize::min(crate::HEIGHT, height);
+                F32Ext::round(crate::HEIGHT as f32 / (dist * F32Ext::cos(dt) * SCALING_FACTOR))
+                    as usize;
             let y0 = (crate::HEIGHT - height) as i32 / 2;
 
-            if height != HEIGHT {
+            if height < HEIGHT {
                 let ceiling = Rectangle::new(
                     Point::new(0, (i % BUFFER_COLUMN_SIZE as usize) as i32),
                     Size::new((HEIGHT - height) as u32 / 2, 1),
                 );
+
                 let floor = Rectangle::new(
                     Point::new(
                         (HEIGHT + height) as i32 / 2,
@@ -77,6 +78,7 @@ impl Player {
                     ),
                     Size::new((HEIGHT as u32 - height as u32) / 2, 1),
                 );
+
                 display
                     .fill_solid_in_context(&ceiling, Rgb565::CSS_DEEP_SKY_BLUE)
                     .unwrap();
@@ -88,9 +90,8 @@ impl Player {
             for y in 0..TEXTURE_SIZE {
                 let y_0 = y0 + (y * height / TEXTURE_SIZE) as i32;
                 let h = (y + 1) * height / TEXTURE_SIZE - y * height / TEXTURE_SIZE;
-                if (y_0 + y0 + h as i32) as usize > HEIGHT {
-                    break;
-                }
+                let h = if (y_0 + h as i32) < 0 { 0 } else { h };
+
                 let rect = Rectangle::new(
                     Point::new(y_0, (i % BUFFER_COLUMN_SIZE as usize) as i32),
                     Size::new(h as u32, 1),
@@ -116,21 +117,23 @@ impl Player {
     }
 
     pub fn move_player(&mut self, x: f32, y: f32) {
-        let dx = x * F32Ext::cos(self.theta) * PLAYER_SPEED + y * F32Ext::sin(self.theta);
-        let dy = y * F32Ext::cos(self.theta) * PLAYER_SPEED + x * F32Ext::cos(self.theta);
+        let dx =
+            (x * F32Ext::cos(self.theta) + y * F32Ext::cos(self.theta + PI / 2.0)) * PLAYER_SPEED;
+        let dy =
+            (x * F32Ext::sin(self.theta) + y * F32Ext::sin(self.theta + PI / 2.0)) * PLAYER_SPEED;
 
         let posx = F32Ext::floor(self.px) as usize;
         let posy = F32Ext::floor(self.py) as usize;
 
         {
             let posx = F32Ext::floor(self.px + dx) as usize;
-            if MAP[posy][posx] == 0 {
+            if MAP[posy][posx] == 0 || MAP[posy][posx] == 4 {
                 self.px += dx;
             }
         }
         {
             let posy = F32Ext::floor(self.py + dy) as usize;
-            if MAP[posy][posx] == 0 {
+            if MAP[posy][posx] == 0 || MAP[posy][posx] == 4 {
                 self.py += dy;
             }
         }
