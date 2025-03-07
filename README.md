@@ -10,10 +10,33 @@ This repo is a wolfstein-like game developed to run on an STM32
 * Use of forked [`mipidsi`](https://github.com/J-Guevara12/mipidsi) crate for ehanced performance.
 * Use of the `micromath` crate to perform approximation-based mathematic functions (more of it later).
 
+![connections](images/connection.png)
+
+## Prerrequisites
+In order to load this project on an MCU, you will need:
+* [`Rust`](https://www.rust-lang.org/tools/install) To build the project
+* [`Cargo`](https://doc.rust-lang.org/cargo/getting-started/installation.html)  To manage dependencies (comes preinstalled with rust if installed with rustup).
+* [`Probe-rs`]((https://probe.rs/docs/getting-started/installation/)) To flash the MCU with the project (it's recommended to use cargo install).
+
+## Download and build the project
+If you want to test it by yourself you can run the following commands:
+
+```bash
+git clone https://github.com/J-Guevara12/juanstein_stm32.git
+cd juanstein_stm32
+cargo run --release
+```
+
+The release flag allows the rust compiler to perform certain optimizations and get better performance, you can also optimize for binary size configuring `Cargo.toml` file.
+
 ## Hardware used:
 * **ili9341:** SPI-based RGB Display.
 * **mpu6030:** Accelerometer and gyroscope used to display the drive the player inclination.
 * **Joystick** Two degrees of freedom joystick used to update the player's position.
+
+## Context diagram
+
+![context](images/Context.png)
 
 ## Project architecture
 
